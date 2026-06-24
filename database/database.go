@@ -9,8 +9,8 @@ import (
 )
 
 var DB *gorm.DB
-func connect(){
-	dsn:="host=localhost password=saatwik2404 dbanme=moviedb user=postgres sslmode=disable port=5432"
+func Connect(){
+	dsn:="host=localhost password=saatwik2404 dbname=moviedb user=postgres sslmode=disable port=5432"
 
 	db,err:=gorm.Open(postgres.Open(dsn),&gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
