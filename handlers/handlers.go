@@ -136,3 +136,42 @@ func handler3(c *gin.Context){
 
 
 }
+
+func handler4(c *gin.Context){
+
+	id:=c.Param("id");
+	ctx:=c.Request.Context()
+	var movie models.Movie
+
+	err2:=database.DB.WithContext(ctx).First(&movie,id).Error
+	if(err2!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+
+	var updated_movie models.Movie
+
+	err:=c.ShouldBindJSON(&updated_movie)
+
+	if(err!=nil){
+		c.JSON(404,gin.H{
+			"message":"invlid input",
+		})
+		return
+	}
+	err3:=database.DB.WithContext(ctx).Model(&models.Movie{}).Where("id=?",id).Updates(&updated_movie).Error
+
+	if(err3!=nil){
+		c.JSON(500,gin.H{
+			"message":"invalid input",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":"updated sucesfully",
+	})
+
+}
