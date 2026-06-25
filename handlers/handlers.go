@@ -174,4 +174,123 @@ func handler4(c *gin.Context){
 		"message":"updated sucesfully",
 	})
 
+
+
+}
+
+func handler5(c *gin.Context){
+	id:=c.Param("id");
+	ctx:=c.Request.Context()
+	var movies models.Movie
+
+	err:=database.DB.WithContext(ctx).First(&movies,id).Error
+
+	if(errors.Is(err,gorm.ErrRecordNotFound)){
+		c.JSON(404,gin.H{
+			"message":"invalid data",
+		})
+		return
+	}
+
+	if(err!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+
+	err2:=database.DB.WithContext(ctx).Delete(&movies,id).Error
+
+	if(err2!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+	c.JSON(200,gin.H{
+		"message":"sucesfully deleted",
+	})
+
+}
+
+func handler6(c *gin.Context){
+
+	var users []models.User
+	ctx:=c.Request.Context()
+	err:=database.DB.WithContext(ctx).Model(&models.User{}).Find(&users).Error
+
+	if(err!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":"sucessfull",
+		"users":users,
+	})
+
+}
+
+func handler7(c *gin.Context){
+	ctx:=c.Request.Context()
+
+	id:=c.Param("id")
+
+	var user models.User
+
+	err:=database.DB.WithContext(ctx).Preload("Reviews").First(&user,id).Error
+
+	if(errors.Is(err,gorm.ErrRecordNotFound)){
+		c.JSON(404,gin.H{
+			"message":"record not found",
+		})
+	}
+	if(err!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+	
+	c.JSON(200,gin.H{
+		"message":user,
+	})
+
+}
+
+func hanlder8(c *gin.Context){
+	ctx:=c.Request.Context()
+	var input struct{
+		Name string	`json:"name"`
+		Email string	`json:"email"`
+	}
+
+	err:=c.ShouldBindJSON(&input)
+
+	user:=models.User{
+		Name: input.Name,
+		Email: input.Email,
+	}
+
+	if(err!=nil){
+		c.JSON(404,gin.H{
+			"messsage":"invalid input",
+		})
+		return
+	}
+
+	err2:=database.DB.WithContext(ctx).Create(&user).Error
+	if(err2!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":"sucesfully created",
+	})
+
 }
