@@ -264,7 +264,7 @@ func GetReviewsByMovie(c *gin.Context){
 	ctx:=c.Request.Context()
 	var reviews []models.Review
 
-	err:=database.DB.WithContext(ctx).Where("movie_id=?",id).Scan(&reviews).Error
+	err:=database.DB.WithContext(ctx).Where("movie_id=?",id).Find(&reviews).Error
 	if(err!=nil){
 		c.JSON(500,gin.H{"message":"something went wrong"})
 		return
