@@ -3,23 +3,28 @@ package routes
 import (
     "cinetrack/handlers"
     "github.com/gin-gonic/gin"
+	"cinetrack/middlewares"
 )
 
 func SetupRoutes(r *gin.Engine) {
-    // Movies
+    // Public routes
     r.GET("/movies", handlers.GetAllMovies)
     r.GET("/movies/:id", handlers.GetMovieByID)
-    r.POST("/movies", handlers.CreateMovie)
-    r.PUT("/movies/:id", handlers.UpdateMovie)
-    r.DELETE("/movies/:id", handlers.DeleteMovie)
-
-    // Users
-    r.GET("/users", handlers.GetAllUsers)
-    r.GET("/users/:id", handlers.GetUserByID)
-    r.POST("/users", handlers.CreateUser)
-    r.DELETE("/users/:id", handlers.DeleteUser)
-
-    // Reviews
-    r.POST("/reviews", handlers.CreateReview)
     r.GET("/movies/:id/reviews", handlers.GetReviewsByMovie)
+
+    // Protected routes
+    protected := r.Group("/")
+    protected.Use(middlewares.AuthMiddleware)
+    {
+        protected.POST("/movies", handlers.CreateMovie)
+        protected.PUT("/movies/:id", handlers.UpdateMovie)
+        protected.DELETE("/movies/:id", handlers.DeleteMovie)
+
+        protected.GET("/users", handlers.GetAllUsers)
+        protected.GET("/users/:id", handlers.GetUserByID)
+        protected.POST("/users", handlers.CreateUser)
+        protected.DELETE("/users/:id", handlers.DeleteUser)
+
+        protected.POST("/reviews", handlers.CreateReview)
+    }
 }

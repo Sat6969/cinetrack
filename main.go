@@ -1,15 +1,14 @@
 package main
 
 import (
-	"cinetrack/database"
-	"github.com/gin-gonic/gin"
+    "cinetrack/database"
+    "cinetrack/routes"
+    "github.com/gin-gonic/gin"
 )
 
-
-func main(){
-
-database.Connect()
-router:=gin.Default()
-router.Run(":8080")
-
+func main() {
+    database.Connect()
+    router := gin.Default()
+    routes.SetupRoutes(router)
+    router.Run(":8080")
 }
