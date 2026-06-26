@@ -294,3 +294,107 @@ func hanlder8(c *gin.Context){
 	})
 
 }
+
+func handler8(c *gin.Context){
+	id:=c.Param("id")
+
+	var user models.User
+	
+	ctx:=c.Request.Context()
+
+	err:=database.DB.WithContext(ctx).First(&user,id).Error
+
+	if(errors.Is(err,gorm.ErrRecordNotFound)){
+		c.JSON(404,gin.H{
+			"message":"invalid data",
+		})
+		return
+	}
+
+	if(err!=nil){
+		c.JSON(500,gin.H{
+			"message":"something went wrong",
+		})
+		return
+	}
+
+	err2:=database.DB.WithContext(ctx).Model(&models.User{}).Delete(&user,id).Error
+
+	if(err2!=nil){
+		c.JSON(500,gin.H{
+			"message":"something went wrong",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":"succesfully deleted",
+	})
+
+	
+}
+
+func handler9(c *gin.Context){
+	ctx:=c.Request.Context()
+
+	var review models.Review
+
+	err:=c.ShouldBindJSON(&review)
+
+	
+	if(err!=nil){
+		c.JSON(404,gin.H{
+			"message":"invalid data",
+		})
+		return
+	}
+
+	err2:=database.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err:=tx.Create(&review).Error
+
+		if(err!=nil){
+			return err
+		} 
+		var avgrating float64
+		tx.Model(&models.Review{}).Where("movie_id=?",review.MovieID).Select("AVG(rating)").Scan(&avgrating)
+
+		if err:=tx.Model(&models.Movie{}).Where("id=?",review.MovieID).Update("rating",avgrating).Error; err!=nil{
+			return err
+		}
+		return nil
+	})
+
+	if(err2!=nil){
+		c.JSON(500,gin.H{
+			"message":"something went wrong",
+		})
+		return
+	}
+	c.JSON(200,gin.H{
+		"message":"succesfull",
+	})
+	
+}
+
+func handler10(c *gin.Context){
+	id:=c.Param("id")
+
+	var reviews []models.Review
+
+	ctx:=c.Request.Context()
+
+	err:=database.DB.WithContext(ctx).Where("movie_id=?",id).Scan(&reviews).Error
+
+	if(err!=nil){
+		c.JSON(500,gin.H{
+			"message":"something went wrong",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":reviews,
+	})
+
+
+}
