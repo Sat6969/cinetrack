@@ -4,6 +4,7 @@ import (
 	"cinetrack/database"
 	"cinetrack/models"
 	"errors"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,7 +14,7 @@ import (
 func GetAllMovies(c *gin.Context){
 	var movies []models.Movie
 	ctx:=c.Request.Context()
-	err:=database.DB.WithContext(ctx).Raw("select * from movies").Scan(&movies).Error
+	err:=database.DB.WithContext(ctx).Preload("Genres").Find(&movies).Error
 
 	if(errors.Is(err,gorm.ErrRecordNotFound)){
 		c.JSON(404,gin.H{"message":"data not found"})
@@ -74,19 +75,24 @@ func CreateMovie(c *gin.Context){
 		c.JSON(400,gin.H{"message":"invalid data"})
 		return
 	}
+	fmt.Println(input.Genres)
 	
 	ctx:=c.Request.Context()
 	movie:=models.Movie{
 		Title: input.Title,
 		Rating: input.Rating,
 		Description: input.Description,
+		Release_year: input.ReleaseYear,
 	}
-
-	for _,name:=range input.Genres{
-		var genres models.Genre
-		database.DB.WithContext(ctx).Where("name=?",name).FirstOrCreate(&genres)
-		movie.Genres = append(movie.Genres, genres)
-	}
+for _, name := range input.Genres {
+    var genres models.Genre
+    result := database.DB.WithContext(ctx).Where("name = ?", name).FirstOrCreate(&genres,models.Genre{Name:name})
+    if result.Error != nil {
+        c.JSON(500, gin.H{"message": "failed to create genre"})
+        return
+    }
+    movie.Genres = append(movie.Genres, genres)
+}
 
 	err3:=database.DB.WithContext(ctx).Create(&movie).Error
 	if(err3!=nil){

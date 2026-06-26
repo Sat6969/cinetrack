@@ -18,8 +18,7 @@ func Connect(){
 	if(err!=nil){
 		panic(err);
 	}
-
-	db.AutoMigrate(&models.Genre{},&models.Movie{},&models.Review{},&models.User{});
+	db.AutoMigrate(&models.User{}, &models.Genre{}, &models.Movie{}, &models.Review{})
 
 	DB=db;
 }

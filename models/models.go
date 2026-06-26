@@ -7,7 +7,7 @@ import(
 
 type Movie struct{
 	gorm.Model
-	Title string `json:"title" gorm:"not null"`
+	Title string `json:"title" gorm:"not null;uniqueIndex"`
 	Rating int	`json:"rating" gorm:"not null;check:rating>=0 AND rating<=10"`
 	Release_year int `json:"release_year" gorm:"not null"`
 	Description string	`json:"description" gorm:"not null"`
