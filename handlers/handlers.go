@@ -271,3 +271,41 @@ func GetReviewsByMovie(c *gin.Context){
 	}
 	c.JSON(200,gin.H{"message":reviews})
 }
+
+func GetHighRatedMovies(c *gin.Context){
+	ctx:=c.Request.Context()
+
+	var movies []models.Movie
+
+	err:=database.DB.WithContext(ctx).Scopes(models.HighRated).Preload("Genres").Preload("Reviews").Find(&movies).Error
+
+	if(err!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":movies,
+	})
+}
+
+func GetLatestMovies(c *gin.Context){
+	ctx:=c.Request.Context()
+
+	var movie []models.Movie
+
+	err:=database.DB.WithContext(ctx).Scopes(models.Recentmovies).Preload("Genres").Preload("Reviews").Find(&movie).Error
+
+	if(err!=nil){
+		c.JSON(500,gin.H{
+			"message":"internal error",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":movie,
+	})
+}

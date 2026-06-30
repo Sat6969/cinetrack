@@ -1,7 +1,9 @@
 package models
 
+import (
+	"cinetrack/database"
+	"cinetrack/models"
 
-import(
 	"gorm.io/gorm"
 )
 
@@ -34,4 +36,13 @@ type Review struct{
 	MovieID int `json:"movie_id" gorm:"not null"`
 	Rating int `json:"rating" gorm:"not null"`
 	Comment string `json:"comment"`
+}
+
+func HighRated(db *gorm.DB) (*gorm.DB){
+
+	return db.Where("rating > ?",7)
+}
+
+func Recentmovies(db *gorm.DB) (*gorm.DB){
+	return db.Where("release_year > ?",2020)
 }
