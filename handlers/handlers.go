@@ -337,7 +337,7 @@ func BatchCreateMovies(c *gin.Context){
 }
 
 
-func HardDeleteMovies(c *gin.Context){
+func HardDeleteMovie(c *gin.Context){
 	ctx:=c.Request.Context()
 	var movie models.Movie
 
@@ -371,4 +371,19 @@ func HardDeleteMovies(c *gin.Context){
 		"message":"deleted sucessfully",
 	})
 
+}
+
+func GetStats(c *gin.Context){
+	ctx:=c.Request.Context()
+	var movieCount,userCount,reviewCount int64
+
+	database.DB.WithContext(ctx).Model(&models.Movie{}).Count(&movieCount)
+	database.DB.WithContext(ctx).Model(&models.User{}).Count(&userCount)
+	database.DB.WithContext(ctx).Model(&models.Review{}).Count(&reviewCount)
+
+	c.JSON(200,gin.H{
+		"total_movies":movieCount,
+		"total_users":userCount,
+		"total_review":reviewCount,
+	})
 }
