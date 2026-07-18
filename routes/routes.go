@@ -7,12 +7,11 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
-    // Public routes
+    
     r.GET("/movies", handlers.GetAllMovies)
     r.GET("/movies/:id", handlers.GetMovieByID)
     r.GET("/movies/:id/reviews", handlers.GetReviewsByMovie)
 
-    // Protected routes
     protected := r.Group("/")
     protected.Use(middlewares.AuthMiddleware)
     {
@@ -24,7 +23,7 @@ func SetupRoutes(r *gin.Engine) {
         protected.GET("/users/:id", handlers.GetUserByID)
         protected.POST("/users", handlers.CreateUser)
         protected.DELETE("/users/:id", handlers.DeleteUser)
-
+         protected.POST("/movies/batch", handlers.BatchCreateMovies)
         protected.POST("/reviews", handlers.CreateReview)
     }
 }

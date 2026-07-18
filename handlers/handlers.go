@@ -309,3 +309,29 @@ func GetLatestMovies(c *gin.Context){
 		"message":movie,
 	})
 }
+
+func BatchCreateMovies(c *gin.Context){
+	ctx:=c.Request.Context()
+	var movies []models.Movie
+
+	err:=c.ShouldBindJSON(&movies)
+	if(err!=nil){
+		c.JSON(404,gin.H{
+			"message":"invalid data",
+		})
+		return
+	}
+
+	err2:=database.DB.WithContext(ctx).CreateInBatches(&movies,10).Error
+
+	if(err2!=nil){
+		c.JSON(500,gin.H{
+			"message":"something went wrong",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":"sucessfully created",
+	})
+}
