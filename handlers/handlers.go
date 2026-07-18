@@ -335,3 +335,40 @@ func BatchCreateMovies(c *gin.Context){
 		"message":"sucessfully created",
 	})
 }
+
+
+func HardDeleteMovies(c *gin.Context){
+	ctx:=c.Request.Context()
+	var movie models.Movie
+
+	err:=c.BindJSON(&movie)
+
+	if(err!=nil){
+		c.JSON(404,gin.H{
+			"message":"invalid data",
+		})
+		return
+	}
+	err2:=database.DB.WithContext(ctx).First(&movie).Error
+
+	if(err2!=nil){
+		c.JSON(500,gin.H{
+			"message":"something went wrong",
+		})
+		return
+	}
+
+	err3:=database.DB.WithContext(ctx).Unscoped().Delete(&movie).Error
+
+	if(err3!=nil){
+		c.JSON(500,gin.H{
+			"message":"something went wrong",
+		})
+		return
+	}
+
+	c.JSON(200,gin.H{
+		"message":"deleted sucessfully",
+	})
+
+}
