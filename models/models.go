@@ -1,9 +1,6 @@
 package models
 
 import (
-	"cinetrack/database"
-	"cinetrack/models"
-
 	"gorm.io/gorm"
 )
 
