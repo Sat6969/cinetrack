@@ -182,8 +182,8 @@ func GetUserByID(c *gin.Context){
 func CreateUser(c *gin.Context){
 	ctx:=c.Request.Context()
 	var input struct{
-		Name string  `json:"name"`
-		Email string `json:"email"`
+		Name string  `json:"name" binding:"required,min=2"`
+		Email string `json:"email" binding:"email"`
 	}
 
 	err:=c.ShouldBindJSON(&input)
