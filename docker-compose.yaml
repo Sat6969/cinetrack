@@ -1,0 +1,24 @@
+services:
+    db:
+      image: postgres
+      restart: always
+      environment:
+        POSTGRES_PASSWORD: saatwik2404
+        POSTGRES_USER: postgres
+        POSTGRES_DB: moviedb
+      ports:
+        - "5432:5432"
+      volumes:
+        - db_data:/var/lib/postgresql
+
+    app:
+      build: .
+      depends_on:
+        - db
+      ports:
+        - "9092:9092"
+      env_file:
+        - db.env
+
+volumes:
+  db_data:

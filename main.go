@@ -19,7 +19,7 @@ func main() {
     routes.SetupRoutes(router)
 
     srv:=&http.Server{
-        Addr:"9092",
+        Addr:":9092",
         Handler:router,
     }
     go func(){
