@@ -1,0 +1,259 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap");
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #080706;
+  color: #eee6db;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.movie-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 50px;
+  padding: 100px 40px;
+  flex-wrap: wrap;
+}
+
+.card {
+  width: 260px;
+  background: #0d0b09;
+  color: #eee6db;
+
+  border: 1px solid #2a2520;
+  border-radius: 3px;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: #d2bea0;
+}
+
+.movie-image {
+  display: block;
+  width: 100%;
+  height: 390px;
+
+  object-fit: cover;
+
+  border-bottom: 1px solid #2a2520;
+
+  filter:
+    sepia(0.15)
+    saturate(0.8)
+    brightness(0.8)
+    contrast(1.05);
+
+  transition:
+    filter 0.25s ease,
+    transform 0.25s ease;
+}
+
+.card:hover .movie-image {
+  filter:
+    sepia(0.05)
+    saturate(1)
+    brightness(0.95)
+    contrast(1.05);
+
+  transform: scale(1.015);
+}
+
+.moviename {
+  margin: 16px 16px 10px;
+
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  font-style: italic;
+
+  line-height: 1.1;
+  letter-spacing: -0.2px;
+
+  color: #eee6db;
+}
+
+
+.movie-details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+
+  margin: 0 16px 12px;
+  row-gap: 8px;
+
+  font-size: 0.72rem;
+  color: #aaa096;
+}
+
+.movie-year {
+  order: 1;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.rating-container {
+  order: 2;
+}
+
+.rating {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #b92e47;
+}
+
+.genres {
+  order: 3;
+  width: 100%;
+
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #aaa096;
+}
+
+.add-to-watchlist {
+  width: calc(100% - 32px);
+  margin: 0 16px 16px;
+
+  padding: 11px 12px;
+
+  background: transparent;
+  color: #d2bea0;
+
+  border: 1px solid #4a4036;
+  border-radius: 2px;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.add-to-watchlist:hover {
+  background: #d2bea0;
+  color: #080706;
+  border-color: #d2bea0;
+}
+
+.navbar {
+  width: 100%;
+
+  background: rgba(8, 7, 6, 0.94);
+
+  border-bottom: 1px solid #2a2520;
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  backdrop-filter: blur(12px);
+}
+
+.navbar-inner {
+  max-width: 1200px;
+
+  margin: 0 auto;
+  padding: 18px 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-family: "Playfair Display", Georgia, serif;
+
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-style: italic;
+
+  color: #eee6db;
+
+  letter-spacing: -0.5px;
+}
+
+.logo span {
+  color: #b92e47;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+
+  gap: 34px;
+}
+
+.nav-link {
+  position: relative;
+
+  padding: 8px 0;
+
+  background: none;
+  border: none;
+
+  color: #aaa096;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+
+  cursor: pointer;
+
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #eee6db;
+}
+
+.nav-link::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
+  width: 0;
+  height: 1px;
+
+  background: #d2bea0;
+
+  transition: width 0.25s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.nav-link.active {
+  color: #eee6db;
+}
+
+.nav-link.active::after {
+  width: 100%;
+  background: #b92e47;
+}
