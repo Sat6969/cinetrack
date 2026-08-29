@@ -1,18 +1,20 @@
-import Moviecard from "./components/moviecard";
-import {movies} from "./data/movies.js";
-import Navbar from "./components/navbar.jsx";
-function App(){
-  return(
-    <>
-    <Navbar />
 
-    <div className="movie-container">
-      {movies.map((movie)=>(
-      <Moviecard key={movie.id} movie={movie}/>
-    ))}
-    </div>
-    </>
-  )
+import Navbar from "./components/navbar.jsx";
+import Home from  "./pages/Home";
+import Discover from "./pages/Discover.jsx";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+function App(){
+
+  return(
+    <BrowserRouter>
+
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />}/>
+        <Route  path="/discover" element={<Discover />}/>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App

@@ -1,20 +1,17 @@
-function Navbar() {
-  return (
-    <nav className="navbar">
-      <div className="navbar-inner">
-        <div className="logo">
-          Cine<span>Track</span>
-        </div>
+import { NavLink } from "react-router-dom";
+
+function Navbar(){
+    return(
+        <nav>
+        <div className="logo">CineTrack</div>
 
         <div className="nav-links">
-          <button className="nav-link active">Home</button>
-          <button className="nav-link">Discover</button>
-          <button className="nav-link">My Movies</button>
-          <button className="nav-link">Profile</button>
+            <NavLink to={"/"} className="nav-link">Home</NavLink>
+            <NavLink to={"/discover"} className="nav-link">Discover</NavLink>
+            <NavLink to={"/my-movies"} className="nav-link">My movies</NavLink>
+            <NavLink to={"/profile"} className="nav-link">Profile</NavLink>
         </div>
-      </div>
-    </nav>
-  );
+        </nav>
+    )
 }
-
 export default Navbar;
