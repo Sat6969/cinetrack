@@ -168,36 +168,31 @@ body {
   backdrop-filter: blur(14px);
 }
 
-.navbar {
+nav {
   position: sticky;
   top: 0;
   z-index: 100;
 
-  width: 100%;
-
-  background: rgba(8, 7, 6, 0.94);
-  border-bottom: 1px solid #2a2520;
-
-  backdrop-filter: blur(14px);
-}
-
-.navbar-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-
-  padding: 20px 40px;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 18px 40px;
+
+  background: rgba(8, 7, 6, 0.95);
+  border-bottom: 1px solid #2a2520;
+
+  backdrop-filter: blur(12px);
 }
 
 
-.logo {
-  text-decoration: none;
 
+.logo {
   font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.7rem;
+  font-size: 1.65rem;
   font-weight: 700;
   font-style: italic;
 
@@ -206,15 +201,13 @@ body {
   color: #eee6db;
 }
 
-.logo span {
-  color: #b92e47;
-}
-
 .nav-links {
   display: flex;
   align-items: center;
   gap: 32px;
 }
+
+
 
 .nav-link {
   position: relative;
@@ -224,21 +217,24 @@ body {
   text-decoration: none;
 
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.67rem;
+  font-size: 0.68rem;
   font-weight: 600;
 
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.1px;
 
-  color: #8f8880;
+  color: #aaa096;
 
   transition: color 0.2s ease;
 }
 
 
+
 .nav-link:hover {
   color: #eee6db;
 }
+
+
 
 .nav-link::after {
   content: "";
@@ -254,9 +250,13 @@ body {
 
   transition: width 0.25s ease;
 }
+
+
 .nav-link:hover::after {
   width: 100%;
 }
+
+
 
 .nav-link.active {
   color: #eee6db;
@@ -267,91 +267,23 @@ body {
   background: #b92e47;
 }
 
-.search-section {
-  max-width: 1200px;
-  margin: 0 auto;
 
-  padding: 70px 40px 20px;
-}
-
-.search-label {
-  margin: 0 0 12px;
-
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.62rem;
-  font-weight: 700;
-
-  text-transform: uppercase;
-  letter-spacing: 1.4px;
-
-  color: #b92e47;
-}
-
-.search-title {
-  margin: 0 0 30px;
-
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 3rem;
-  font-weight: 700;
-  font-style: italic;
-
-  line-height: 1.05;
-
-  color: #eee6db;
-}
-
-.search-input {
-  width: 100%;
-  max-width: 700px;
-
-  padding: 14px 0;
-
-  background: transparent;
-  color: #eee6db;
-
-  border: none;
-  border-bottom: 1px solid #4a4036;
-
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 1rem;
-  font-weight: 500;
-
-  letter-spacing: 0.2px;
-
-  outline: none;
-
-  transition:
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.search-input::placeholder {
-  color: #6f685f;
-}
-
-.search-input:focus {
-  border-bottom-color: #d2bea0;
-}
-
-.search-input:focus {
-  border-bottom-color: #b92e47;
-}
 
 @media (max-width: 700px) {
-  .navbar-inner {
+  nav {
     padding: 16px 20px;
-  }
-
-  .nav-links {
-    gap: 16px;
-  }
-
-  .nav-link {
-    font-size: 0.58rem;
-    letter-spacing: 0.8px;
   }
 
   .logo {
     font-size: 1.4rem;
+  }
+
+  .nav-links {
+    gap: 15px;
+  }
+
+  .nav-link {
+    font-size: 0.58rem;
+    letter-spacing: 0.7px;
   }
 }
