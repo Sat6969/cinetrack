@@ -1,171 +1,86 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
+/* ============================================================
+   DARKROOM CONTACT SHEET
+   A movie watchlist as a photographer's contact sheet, reviewed
+   under a red safelight. Sprocket-strip dividers, stamped frame
+   numbers, grease-pencil circles on your picks.
+   ============================================================ */
+
+:root {
+  --safelight: #a9222c;
+  --safelight-deep: #5c0f17;
+  --safelight-shadow: #2b0a0f;
+  --stock-cream: #efe6d2;
+  --stock-cream-dim: #ddd0b4;
+  --ink: #18120d;
+  --brass: #c9a24b;
+  --brass-bright: #e0bd6b;
+
+  --font-display: "Bebas Neue", Impact, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+  --font-sans: "IBM Plex Sans", Arial, sans-serif;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+
+  /* an infinite loop sped up to 0.01ms would flicker rapidly
+     instead of stopping, so it gets switched off outright */
+  .big-heading,
+  .big-heading::before {
+    animation: none !important;
+    opacity: 1;
+    filter: none;
+  }
+}
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: #080706;
-  color: #eee6db;
-  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(ellipse at 50% 20%, transparent 0%, rgba(0, 0, 0, 0.5) 100%),
+    linear-gradient(180deg, var(--safelight) 0%, var(--safelight-deep) 55%, var(--safelight-shadow) 100%);
+  background-attachment: fixed;
+
+  color: var(--stock-cream);
+  font-family: var(--font-sans);
+
+  position: relative;
 }
 
-.movie-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 50px;
-  padding: 100px 40px;
-  flex-wrap: wrap;
+/* Film grain -- a fixed, static texture layer. No animation: it's
+   ambient material, not a motion effect. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.card {
-  width: 260px;
-  background: #0d0b09;
-  color: #eee6db;
-
-  border: 1px solid #2a2520;
-  border-radius: 3px;
-
-  overflow: hidden;
-
-  transition:
-    transform 0.25s ease,
-    border-color 0.25s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  border-color: #d2bea0;
-}
-
-.movie-image {
-  display: block;
-  width: 100%;
-  height: 390px;
-
-  object-fit: cover;
-
-  border-bottom: 1px solid #2a2520;
-
-  filter:
-    sepia(0.15)
-    saturate(0.8)
-    brightness(0.8)
-    contrast(1.05);
-
-  transition:
-    filter 0.25s ease,
-    transform 0.25s ease;
-}
-
-.card:hover .movie-image {
-  filter:
-    sepia(0.05)
-    saturate(1)
-    brightness(0.95)
-    contrast(1.05);
-
-  transform: scale(1.015);
-}
-
-.moviename {
-  margin: 16px 16px 10px;
-
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1.45rem;
-  font-weight: 700;
-  font-style: italic;
-
-  line-height: 1.1;
-  letter-spacing: -0.2px;
-
-  color: #eee6db;
-}
-
-
-.movie-details {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-
-  margin: 0 16px 12px;
-  row-gap: 8px;
-
-  font-size: 0.72rem;
-  color: #aaa096;
-}
-
-.movie-year {
-  order: 1;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.rating-container {
-  order: 2;
-}
-
-.rating {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #b92e47;
-}
-
-.genres {
-  order: 3;
-  width: 100%;
-
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: #aaa096;
-}
-
-.add-to-watchlist {
-  width: calc(100% - 32px);
-  margin: 0 16px 16px;
-
-  padding: 11px 12px;
-
-  background: transparent;
-  color: #d2bea0;
-
-  border: 1px solid #4a4036;
-  border-radius: 2px;
-
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-
-  text-transform: uppercase;
-  letter-spacing: 1px;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.add-to-watchlist:hover {
-  background: #d2bea0;
-  color: #080706;
-  border-color: #d2bea0;
-}
-
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-
-  width: 100%;
-
-  background: rgba(8, 7, 6, 0.94);
-  border-bottom: 1px solid #2a2520;
-
-  backdrop-filter: blur(14px);
+nav,
+.hero-section,
+.featured-movies,
+.discover {
+  position: relative;
+  z-index: 1;
 }
 
 nav {
@@ -178,63 +93,66 @@ nav {
   align-items: center;
 
   width: 100%;
-  box-sizing: border-box;
+  padding: 16px 40px 0;
 
-  padding: 18px 40px;
-
-  background: rgba(8, 7, 6, 0.95);
-  border-bottom: 1px solid #2a2520;
-
-  backdrop-filter: blur(12px);
+  background: rgba(24, 18, 13, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
+nav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
+  height: 14px;
+  background-color: var(--ink);
+  background-image: radial-gradient(circle, var(--safelight-deep) 0 3.5px, transparent 4px);
+  background-size: 22px 14px;
+  background-position: 11px center;
+  background-repeat: repeat-x;
+}
 
 .logo {
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.65rem;
-  font-weight: 700;
-  font-style: italic;
+  padding-bottom: 16px;
 
-  letter-spacing: -0.5px;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: 0.5px;
 
-  color: #eee6db;
+  color: var(--stock-cream);
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 30px;
+
+  padding-bottom: 16px;
 }
-
-
 
 .nav-link {
   position: relative;
 
-  padding: 8px 0;
+  padding: 6px 0;
 
   text-decoration: none;
 
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 
-  text-transform: uppercase;
-  letter-spacing: 1.1px;
+  color: var(--stock-cream-dim);
 
-  color: #aaa096;
-
-  transition: color 0.2s ease;
+  transition: color 0.2s var(--ease);
 }
-
-
 
 .nav-link:hover {
-  color: #eee6db;
+  color: var(--brass-bright);
 }
-
-
 
 .nav-link::after {
   content: "";
@@ -244,46 +162,723 @@ nav {
   bottom: 0;
 
   width: 0;
-  height: 1px;
+  height: 2px;
 
-  background: #d2bea0;
+  background: var(--brass);
 
-  transition: width 0.25s ease;
+  transition: width 0.25s var(--ease);
 }
-
 
 .nav-link:hover::after {
   width: 100%;
 }
 
-
-
 .nav-link.active {
-  color: #eee6db;
+  color: var(--brass-bright);
 }
 
 .nav-link.active::after {
   width: 100%;
-  background: #b92e47;
 }
 
+.nav-link:focus-visible {
+  outline: 1px solid var(--brass);
+  outline-offset: 4px;
+}
 
+/* ---------------- HOME ---------------- */
+
+.hero-section {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  padding: 80px 40px 60px;
+}
+
+.small-label {
+  display: inline-block;
+
+  margin: 0 0 16px;
+  padding-bottom: 3px;
+
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-style: italic;
+  font-weight: 500;
+
+  color: var(--brass-bright);
+
+  border-bottom: 1px dashed var(--brass);
+  transform: rotate(-1.2deg);
+}
+
+.big-heading {
+  position: relative;
+  overflow: hidden;
+
+  max-width: 760px;
+
+  margin: 0 0 22px;
+
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 4.5vw + 1.5rem, 5.5rem);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: 0.5px;
+
+  color: var(--stock-cream);
+
+  /* the title sits dim until the spotlight beam (the ::before
+     below) sweeps across it once, then it stays fully lit */
+  animation: heading-lit 2.2s var(--ease) both;
+}
+
+/* the spotlight beam itself: an angled band of light that sweeps
+   once across the heading, then settles into a slow, faint pass
+   every few seconds -- like a marquee light catching the letters,
+   not a loud effect. `overflow: hidden` on the heading above keeps
+   this beam's travel clipped to the heading's own box, so it can
+   never push the page's scrollable area wider than the viewport. */
+.big-heading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    100deg,
+    transparent 40%,
+    rgba(255, 232, 150, 0.95) 49%,
+    rgba(255, 196, 92, 0.55) 53%,
+    transparent 62%
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+
+  animation:
+    spotlight-sweep 2.2s ease-out both,
+    spotlight-glint 9s ease-in-out 2.2s infinite;
+}
+
+@keyframes heading-lit {
+  0% {
+    opacity: 0;
+    filter: brightness(0.35);
+  }
+  45% {
+    opacity: 0.5;
+    filter: brightness(0.6);
+  }
+  62% {
+    opacity: 1;
+    filter: brightness(1.3);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes spotlight-sweep {
+  0% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+@keyframes spotlight-glint {
+  0%,
+  100% {
+    transform: translateX(-140%);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(140%);
+    opacity: 0.4;
+  }
+}
+
+.short-description {
+  max-width: 560px;
+
+  margin-bottom: 30px;
+
+  font-size: 0.95rem;
+  line-height: 1.7;
+
+  color: var(--stock-cream-dim);
+}
+
+.discover-button {
+  display: inline-block;
+
+  padding: 12px 20px;
+
+  background: var(--brass);
+  color: var(--ink);
+
+  border: none;
+  border-radius: 1px;
+
+  text-decoration: none;
+
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  box-shadow: 3px 3px 0 var(--safelight-shadow);
+
+  transition:
+    transform 0.15s var(--ease),
+    box-shadow 0.15s var(--ease),
+    background 0.15s var(--ease);
+}
+
+.discover-button:hover {
+  background: var(--brass-bright);
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--safelight-shadow);
+}
+
+.discover-button:focus-visible {
+  outline: 2px solid var(--stock-cream);
+  outline-offset: 3px;
+}
+
+/* ---------------- FEATURED ---------------- */
+
+.featured-movies {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  padding: 0 40px 100px;
+}
+
+.featured-header {
+  position: relative;
+
+  padding-bottom: 26px;
+  margin-bottom: 14px;
+}
+
+.featured-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 12px;
+  background-color: var(--ink);
+  background-image: radial-gradient(circle, var(--safelight-deep) 0 3px, transparent 3.5px);
+  background-size: 20px 12px;
+  background-position: 10px center;
+  background-repeat: repeat-x;
+  opacity: 0.85;
+}
+
+.featured-label {
+  margin: 0 0 8px;
+
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+
+  color: var(--stock-cream-dim);
+}
+
+.featured-heading {
+  margin: 0 0 8px;
+
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+
+  color: var(--stock-cream);
+}
+
+.featured-description {
+  margin: 0;
+
+  max-width: 62ch;
+
+  font-size: 0.85rem;
+
+  color: var(--stock-cream-dim);
+}
+
+/* ---------------- MOVIE GRID ---------------- */
+
+.movie-container,
+.movie-results-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  gap: 36px;
+
+  margin-top: 36px;
+
+  counter-reset: frame;
+}
+
+/* ---------------- MOVIE CARD ---------------- */
+
+.card {
+  position: relative;
+
+  width: 260px;
+
+  background: var(--stock-cream);
+  color: var(--ink);
+
+  border-radius: 1px;
+
+  overflow: hidden;
+
+  counter-increment: frame;
+
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 7px 9px 0 rgba(0, 0, 0, 0.4);
+}
+
+.card::before {
+  content: "f." counter(frame, decimal-leading-zero);
+
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+
+  padding: 3px 7px;
+
+  background: var(--brass);
+  color: var(--ink);
+
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+
+  border-radius: 1px;
+}
+
+.movie-image {
+  display: block;
+
+  width: 100%;
+  height: 390px;
+
+  object-fit: cover;
+
+  filter: sepia(0.2) saturate(0.75) brightness(0.82) contrast(1.08);
+
+  border: 3px solid transparent;
+  border-radius: 0;
+
+  transition:
+    filter 0.3s var(--ease),
+    border-radius 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    transform 0.3s var(--ease);
+}
+
+.card:hover .movie-image {
+  filter: sepia(0.05) saturate(1) brightness(0.95) contrast(1.05);
+  border-color: var(--safelight);
+  border-radius: 52% 46% 50% 44% / 44% 52% 46% 50%;
+  transform: scale(1.02) rotate(-0.6deg);
+}
+
+.moviename {
+  margin: 16px 16px 8px;
+
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  line-height: 1;
+
+  color: var(--ink);
+}
+
+.movie-details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+
+  margin: 0 16px 12px;
+
+  row-gap: 8px;
+
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+
+  color: #5a5040;
+}
+
+.movie-year {
+  order: 1;
+  font-weight: 500;
+}
+
+.rating-container {
+  order: 2;
+}
+
+.rating {
+  position: relative;
+
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+
+  color: var(--safelight);
+}
+
+.genres {
+  order: 3;
+  width: 100%;
+
+  font-size: 0.66rem;
+  font-variant: small-caps;
+  letter-spacing: 0.6px;
+
+  color: #7a6f5a;
+}
+
+.add-to-watchlist {
+  width: calc(100% - 32px);
+
+  margin: 0 16px 16px;
+  padding: 11px 12px;
+
+  background: transparent;
+  color: var(--ink);
+
+  border: 1.5px solid var(--ink);
+  border-radius: 1px;
+
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.add-to-watchlist:hover,
+.add-to-watchlist:focus-visible {
+  background: var(--ink);
+  color: var(--stock-cream);
+}
+
+.add-to-watchlist:focus-visible {
+  outline: 2px solid var(--safelight);
+  outline-offset: 2px;
+}
+
+/* ---------------- DISCOVER ---------------- */
+
+.discover {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  padding: 60px 40px 100px;
+}
+
+.discover .heading {
+  margin: 0 0 28px;
+
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 3.5vw + 1.5rem, 4rem);
+  font-weight: 400;
+  line-height: 0.95;
+
+  color: var(--stock-cream);
+}
+
+.search-input {
+  width: 100%;
+  max-width: 700px;
+
+  padding: 14px 2px;
+
+  background: transparent;
+  color: var(--stock-cream);
+
+  border: none;
+  border-bottom: 2px solid var(--brass);
+
+  font-family: var(--font-sans);
+  font-size: 1rem;
+
+  outline: none;
+
+  transition: border-color 0.2s var(--ease);
+}
+
+.search-input::placeholder {
+  color: rgba(239, 230, 210, 0.4);
+}
+
+.search-input:focus {
+  border-bottom-color: var(--brass-bright);
+}
+
+/* ---------------- GENRE FILTER ---------------- */
+
+.genre-button-area {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 12px;
+
+  margin-top: 26px;
+  margin-bottom: 45px;
+}
+
+.genre-button {
+  padding: 7px 14px;
+
+  background: transparent;
+  color: var(--stock-cream-dim);
+
+  border: 1px solid rgba(239, 230, 210, 0.25);
+  border-radius: 1px;
+
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    background 0.2s var(--ease);
+}
+
+.genre-button:hover {
+  color: var(--stock-cream);
+  border-color: var(--brass);
+}
+
+.genre-button:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+.genre-button.active {
+  background: var(--brass);
+  color: var(--ink);
+  border-color: var(--brass);
+}
+
+/* ---------------- MY MOVIES PAGE ---------------- */
+
+.my-movie-page {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  padding: 60px 40px 100px;
+
+  position: relative;
+  z-index: 1;
+}
+
+.my-movie-page .heading {
+  position: relative;
+
+  margin: 0 0 30px;
+  padding-bottom: 26px;
+
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 3.5vw + 1.5rem, 4rem);
+  font-weight: 400;
+  line-height: 0.95;
+
+  color: var(--stock-cream);
+}
+
+/* same sprocket-strip motif used under nav/featured-header, so
+   this page reads as part of the same reel */
+.my-movie-page .heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 12px;
+  background-color: var(--ink);
+  background-image: radial-gradient(circle, var(--safelight-deep) 0 3px, transparent 3.5px);
+  background-size: 20px 12px;
+  background-position: 10px center;
+  background-repeat: repeat-x;
+  opacity: 0.85;
+}
+
+.my-movie-search {
+  width: 100%;
+  max-width: 700px;
+
+  margin-bottom: 26px;
+
+  padding: 14px 2px;
+
+  background: transparent;
+  color: var(--stock-cream);
+
+  border: none;
+  border-bottom: 2px solid var(--brass);
+
+  font-family: var(--font-sans);
+  font-size: 1rem;
+
+  outline: none;
+
+  transition: border-color 0.2s var(--ease);
+}
+
+.my-movie-search::placeholder {
+  color: rgba(239, 230, 210, 0.4);
+}
+
+.my-movie-search:focus {
+  border-bottom-color: var(--brass-bright);
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 12px;
+
+  margin-bottom: 40px;
+}
+
+/* same visual role as .genre-button, kept as its own rule since
+   this component uses its own class name */
+.status-button {
+  padding: 7px 14px;
+
+  background: transparent;
+  color: var(--stock-cream-dim);
+
+  border: 1px solid rgba(239, 230, 210, 0.25);
+  border-radius: 1px;
+
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    background 0.2s var(--ease);
+}
+
+.status-button:hover {
+  color: var(--stock-cream);
+  border-color: var(--brass);
+}
+
+.status-button:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+.status-button.active {
+  background: var(--brass);
+  color: var(--ink);
+  border-color: var(--brass);
+}
+
+.movie-result {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  gap: 36px;
+
+  counter-reset: frame;
+}
+
+/* ---------------- MOBILE ---------------- */
+
+@media (max-width: 900px) {
+  .movie-image {
+    height: 340px;
+  }
+}
 
 @media (max-width: 700px) {
   nav {
-    padding: 16px 20px;
+    padding: 14px 20px 0;
   }
 
   .logo {
-    font-size: 1.4rem;
+    font-size: 1.7rem;
+    padding-bottom: 14px;
   }
 
   .nav-links {
-    gap: 15px;
+    gap: 16px;
+    padding-bottom: 14px;
   }
 
   .nav-link {
-    font-size: 0.58rem;
-    letter-spacing: 0.7px;
+    font-size: 0.68rem;
+  }
+
+  .hero-section {
+    padding: 55px 20px 45px;
+  }
+
+  .featured-movies {
+    padding: 0 20px 80px;
+  }
+
+  .discover {
+    padding: 45px 20px 80px;
+  }
+
+  .movie-container,
+  .movie-results-area {
+    justify-content: center;
+  }
+
+  .genre-button-area {
+    gap: 10px;
+  }
+
+  .my-movie-page {
+    padding: 45px 20px 80px;
+  }
+
+  .movie-result {
+    justify-content: center;
+  }
+
+  .filter-buttons {
+    gap: 10px;
   }
 }
