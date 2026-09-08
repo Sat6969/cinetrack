@@ -31,7 +31,9 @@ export const movies=[
     "genres": ["Sci-Fi", "Thriller", "Action"],
     "poster": "/images/inception.jpg",
     "inWatchlist": false,
-    "status":"Watched"
+    "status":"Watched",
+     "userRating": 9,
+     "review": "Great movie"
   },
   {
     "id": 2,
@@ -41,7 +43,9 @@ export const movies=[
     "genres": ["Sci-Fi", "Adventure", "Drama"],
       poster: "/images/interstellar.avif",
     "inWatchlist": false,
-    "status":"Watching"
+    "status":"Watching",
+    "userRating": 8,
+     "review": "Loved the pacing and concept."
   },
   {
     "id": 3,
@@ -51,6 +55,8 @@ export const movies=[
     "genres": ["Action", "Crime", "Drama"],
       poster: "/images/darkknight.avif",
     "inWatchlist": false,
-    "status":"want to watch"
+    "status":"Want to Watch",
+    "userRating": 10,
+     "review": null
   }
 ]
