@@ -2304,6 +2304,760 @@ nav::after {
 }
 
 /* ============================================================
+   MOVIE DETAILS
+   Film archive / projection room treatment
+   ============================================================ */
+
+.movie-details-page {
+  position: relative;
+  z-index: 1;
+
+  max-width: 1100px;
+  margin: 0 auto;
+
+  padding: 70px 40px 110px;
+
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+
+  gap: 70px;
+
+  align-items: start;
+
+  overflow: hidden;
+}
+
+/* subtle projector light */
+
+.movie-details-page::before {
+  content: "";
+
+  position: absolute;
+
+  width: 700px;
+  height: 600px;
+
+  top: -170px;
+  right: -240px;
+
+  z-index: -1;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(224, 189, 107, 0.13) 0%,
+      rgba(169, 34, 44, 0.05) 40%,
+      transparent 72%
+    );
+
+  opacity: 0;
+
+  animation:
+    details-projector-on
+    1.8s
+    var(--ease)
+    forwards;
+}
+
+@keyframes details-projector-on {
+  0% {
+    opacity: 0;
+  }
+
+  60% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.72;
+  }
+}
+
+/* ---------------- POSTER ---------------- */
+
+.details-poster-area {
+  position: relative;
+
+  opacity: 0;
+
+  animation:
+    details-frame-in
+    0.85s
+    var(--ease)
+    0.15s
+    forwards;
+}
+
+@keyframes details-frame-in {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateY(25px)
+      rotate(-1.8deg)
+      scale(0.95);
+
+    filter:
+      brightness(0.25)
+      sepia(0.8);
+  }
+
+  65% {
+    opacity: 1;
+
+    transform:
+      translateY(-3px)
+      rotate(0.4deg)
+      scale(1.01);
+
+    filter:
+      brightness(1.1)
+      sepia(0.2);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      rotate(0)
+      scale(1);
+
+    filter:
+      brightness(1)
+      sepia(0);
+  }
+}
+
+.details-poster {
+  display: block;
+
+  width: 100%;
+  max-height: 540px;
+
+  object-fit: cover;
+
+  background: var(--ink);
+
+  border:
+    8px solid
+    var(--stock-cream);
+
+  border-radius: 1px;
+
+  box-shadow:
+    8px 10px 0
+    rgba(0, 0, 0, 0.4);
+
+  filter:
+    sepia(0.16)
+    saturate(0.82)
+    brightness(0.88);
+
+  transition:
+    filter 0.35s var(--ease),
+    transform 0.35s var(--ease);
+}
+
+.details-poster-area:hover .details-poster {
+  filter:
+    sepia(0.03)
+    saturate(1)
+    brightness(1);
+
+  transform:
+    scale(1.012);
+}
+
+.details-frame-number {
+  position: absolute;
+
+  top: 18px;
+  left: 18px;
+
+  z-index: 2;
+
+  padding: 5px 8px;
+
+  background: var(--brass);
+  color: var(--ink);
+
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  font-weight: 600;
+
+  letter-spacing: 0.5px;
+
+  box-shadow:
+    2px 2px 0
+    rgba(0, 0, 0, 0.3);
+}
+
+/* ---------------- DETAILS CONTENT ---------------- */
+
+.details-content {
+  min-width: 0;
+
+  opacity: 0;
+
+  animation:
+    details-content-in
+    0.85s
+    var(--ease)
+    0.4s
+    forwards;
+}
+
+@keyframes details-content-in {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateX(22px);
+
+    filter:
+      brightness(0.4);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateX(0);
+
+    filter:
+      brightness(1);
+  }
+}
+
+.details-label {
+  display: inline-block;
+
+  margin-bottom: 12px;
+  padding-bottom: 3px;
+
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-style: italic;
+
+  letter-spacing: 0.6px;
+
+  color: var(--brass-bright);
+
+  border-bottom:
+    1px dashed
+    var(--brass);
+
+  transform:
+    rotate(-0.7deg);
+}
+
+.details-title {
+  position: relative;
+
+  margin:
+    0 0 18px;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    clamp(
+      3rem,
+      5vw,
+      5.5rem
+    );
+
+  font-weight: 400;
+
+  line-height: 0.9;
+
+  letter-spacing: 0.4px;
+
+  color:
+    var(--stock-cream);
+}
+
+.details-meta {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 22px;
+
+  margin-bottom: 18px;
+
+  font-family:
+    var(--font-mono);
+
+  font-size: 0.78rem;
+
+  color:
+    var(--stock-cream-dim);
+}
+
+.details-meta span:last-child {
+  color:
+    var(--brass-bright);
+}
+
+.details-genres {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 9px;
+
+  margin-bottom: 28px;
+}
+
+.details-genres span {
+  padding:
+    6px 10px;
+
+  border:
+    1px solid
+    rgba(239, 230, 210, 0.25);
+
+  font-family:
+    var(--font-mono);
+
+  font-size: 0.67rem;
+
+  color:
+    var(--stock-cream-dim);
+
+  background:
+    rgba(24, 18, 13, 0.18);
+}
+
+.details-divider {
+  height: 12px;
+
+  margin-bottom: 34px;
+
+  background-color:
+    var(--ink);
+
+  background-image:
+    radial-gradient(
+      circle,
+      var(--safelight-deep) 0 3px,
+      transparent 3.5px
+    );
+
+  background-size:
+    20px 12px;
+
+  background-position:
+    10px center;
+
+  background-repeat:
+    repeat-x;
+
+  opacity: 0.85;
+}
+
+/* ---------------- EDITABLE SECTIONS ---------------- */
+
+.details-section {
+  display: grid;
+
+  grid-template-columns:
+    150px 1fr;
+
+  gap: 25px;
+
+  align-items: start;
+
+  padding:
+    20px 0;
+
+  border-bottom:
+    1px dashed
+    rgba(239, 230, 210, 0.17);
+}
+
+.details-section label {
+  padding-top: 10px;
+
+  font-family:
+    var(--font-mono);
+
+  font-size: 0.72rem;
+
+  font-weight: 500;
+
+  letter-spacing: 0.4px;
+
+  color:
+    var(--brass-bright);
+
+  text-transform:
+    uppercase;
+}
+
+.details-select {
+  width: 100%;
+  max-width: 340px;
+
+  padding:
+    11px 12px;
+
+  background:
+    rgba(24, 18, 13, 0.75);
+
+  color:
+    var(--stock-cream);
+
+  border:
+    1px solid
+    rgba(239, 230, 210, 0.25);
+
+  border-radius: 1px;
+
+  font-family:
+    var(--font-mono);
+
+  font-size: 0.78rem;
+
+  outline: none;
+
+  cursor: pointer;
+
+  transition:
+    border-color
+    0.2s
+    var(--ease),
+    background
+    0.2s
+    var(--ease);
+}
+
+.details-select:hover,
+.details-select:focus {
+  border-color:
+    var(--brass);
+
+  background:
+    rgba(24, 18, 13, 0.95);
+}
+
+.details-review {
+  width: 100%;
+
+  min-height: 150px;
+
+  resize: vertical;
+
+  padding:
+    14px 15px;
+
+  background:
+    rgba(24, 18, 13, 0.68);
+
+  color:
+    var(--stock-cream);
+
+  border:
+    1px solid
+    rgba(239, 230, 210, 0.25);
+
+  border-radius: 1px;
+
+  outline: none;
+
+  font-family:
+    var(--font-sans);
+
+  font-size: 0.9rem;
+
+  line-height: 1.6;
+
+  transition:
+    border-color
+    0.2s
+    var(--ease),
+    background
+    0.2s
+    var(--ease);
+}
+
+.details-review::placeholder {
+  color:
+    rgba(239, 230, 210, 0.32);
+}
+
+.details-review:hover,
+.details-review:focus {
+  border-color:
+    var(--brass);
+
+  background:
+    rgba(24, 18, 13, 0.9);
+}
+
+/* ---------------- SAVE ---------------- */
+
+.details-save-button {
+  margin-top: 30px;
+
+  padding:
+    13px 22px;
+
+  background:
+    var(--brass);
+
+  color:
+    var(--ink);
+
+  border: none;
+  border-radius: 1px;
+
+  font-family:
+    var(--font-mono);
+
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  letter-spacing: 0.4px;
+
+  cursor: pointer;
+
+  box-shadow:
+    4px 4px 0
+    var(--safelight-shadow);
+
+  animation:
+    save-button-in
+    0.3s
+    var(--ease)
+    both;
+
+  transition:
+    transform
+    0.15s
+    var(--ease),
+    background
+    0.15s
+    var(--ease),
+    box-shadow
+    0.15s
+    var(--ease);
+}
+
+@keyframes save-button-in {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+.details-save-button:hover {
+  background:
+    var(--brass-bright);
+
+  transform:
+    translate(1px, 1px);
+
+  box-shadow:
+    3px 3px 0
+    var(--safelight-shadow);
+}
+
+.details-save-button:disabled {
+  opacity: 0.6;
+
+  cursor: wait;
+}
+
+.details-save-error {
+  margin:
+    18px 0 0;
+
+  padding:
+    10px 12px;
+
+  border-left:
+    3px solid
+    var(--safelight);
+
+  background:
+    rgba(24, 18, 13, 0.45);
+
+  font-family:
+    var(--font-mono);
+
+  font-size: 0.75rem;
+
+  color:
+    var(--stock-cream);
+}
+
+/* ============================================================
+   DETAILS LOADING / ERROR STATE
+   ============================================================ */
+
+.details-state {
+  position: relative;
+  z-index: 1;
+
+  min-height:
+    calc(100vh - 100px);
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 22px;
+
+  padding: 40px;
+
+  text-align: center;
+}
+
+.details-state-label {
+  font-family:
+    var(--font-mono);
+
+  font-size: 0.72rem;
+
+  letter-spacing: 1px;
+
+  color:
+    var(--brass-bright);
+}
+
+.details-state h1 {
+  margin: 0;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    clamp(
+      2.2rem,
+      5vw,
+      4rem
+    );
+
+  font-weight: 400;
+
+  color:
+    var(--stock-cream);
+}
+
+.details-loader {
+  width: 52px;
+  height: 52px;
+
+  border:
+    3px solid
+    rgba(239, 230, 210, 0.15);
+
+  border-top-color:
+    var(--brass);
+
+  border-radius: 50%;
+
+  animation:
+    reel-spinner
+    0.8s
+    linear
+    infinite;
+}
+
+@keyframes reel-spinner {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/* ============================================================
+   MOVIE DETAILS RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 850px) {
+  .movie-details-page {
+    grid-template-columns:
+      280px 1fr;
+
+    gap: 40px;
+
+    padding:
+      55px 30px 90px;
+  }
+
+  .details-section {
+    grid-template-columns:
+      120px 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .movie-details-page {
+    display: block;
+
+    padding:
+      45px 20px 80px;
+  }
+
+  .details-poster-area {
+    max-width: 320px;
+
+    margin:
+      0 auto 45px;
+  }
+
+  .details-content {
+    width: 100%;
+  }
+
+  .details-title {
+    font-size:
+      clamp(
+        3rem,
+        15vw,
+        4.5rem
+      );
+  }
+
+  .details-section {
+    display: block;
+
+    padding:
+      18px 0;
+  }
+
+  .details-section label {
+    display: block;
+
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  .details-select {
+    max-width: none;
+  }
+
+  .details-save-button {
+    width: 100%;
+  }
+}
+
+/* ============================================================
    MOBILE
    ============================================================ */
 
@@ -2387,4 +3141,90 @@ nav::after {
   .review-list {
     flex-direction: column;
   }
+}
+
+/* ============================================================
+   SKIP INTRO ANIMATIONS ON RETURN VISITS
+   ============================================================ */
+
+.skip-intro *,
+.skip-intro::before,
+.skip-intro::after,
+.skip-intro *::before,
+.skip-intro *::after {
+  animation: none !important;
+}
+
+
+/* HOME */
+
+.hero-section.skip-intro .small-label,
+.hero-section.skip-intro .short-description,
+.hero-section.skip-intro .discover-button,
+.featured-movies.skip-intro .featured-header,
+.featured-movies.skip-intro .card {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.hero-section.skip-intro .big-heading::before {
+  display: none;
+}
+
+
+/* DISCOVER */
+
+.discover.skip-intro .search-input,
+.discover.skip-intro .genre-button,
+.discover.skip-intro .movie-results-area .card {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.discover.skip-intro .heading::before,
+.discover.skip-intro .heading::after {
+  display: none;
+}
+
+
+/* MY MOVIES */
+
+.my-movie-page.skip-intro .my-movie-search,
+.my-movie-page.skip-intro .status-button,
+.my-movie-page.skip-intro .movie-result .card {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.my-movie-page.skip-intro .heading::before {
+  display: none;
+}
+
+
+/* PROFILE */
+
+.profile-page.skip-intro::before,
+.profile-page.skip-intro::after {
+  display: none;
+}
+
+.profile-page.skip-intro .profile-header,
+.profile-page.skip-intro .stat-card,
+.profile-page.skip-intro .favorite-genres,
+.profile-page.skip-intro .favorite-genre,
+.profile-page.skip-intro .top-rated-section,
+.profile-page.skip-intro .top-rated-section .card,
+.profile-page.skip-intro .recent-activity,
+.profile-page.skip-intro .review-item {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+
+/* MOVIE DETAILS */
+
+.movie-details-page.skip-intro .details-poster-area,
+.movie-details-page.skip-intro .details-content {
+  opacity: 1 !important;
+  filter: none !important;
 }

@@ -3,8 +3,12 @@ import { movies } from "../data/movies";
 import Moviecard from "../components/moviecard";
 
 function MyMovies() {
-  const allStatus = movies.map((movie) => movie.status);
+  const allStatus = movies.map((movie) => {
+    return movie.status;
+  });
+
   const uniqueStatus = [...new Set(allStatus)];
+
   const statuses = ["All", ...uniqueStatus];
 
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -18,9 +22,11 @@ function MyMovies() {
     return movie.status === selectedStatus;
   });
 
-  const filteredMovies = statusFilteredMovies.filter((movie) =>
-    movie.title.toLowerCase().includes(movieSearch.toLowerCase())
-  );
+  const filteredMovies = statusFilteredMovies.filter((movie) => {
+    return movie.title
+      .toLowerCase()
+      .includes(movieSearch.toLowerCase());
+  });
 
   return (
     <div className="my-movie-page">
@@ -32,7 +38,9 @@ function MyMovies() {
         type="text"
         placeholder="Search your movies..."
         value={movieSearch}
-        onChange={(e) => setMovieSearch(e.target.value)}
+        onChange={(e) => {
+          setMovieSearch(e.target.value);
+        }}
         className="my-movie-search"
       />
 
@@ -45,7 +53,9 @@ function MyMovies() {
                 ? "status-button active"
                 : "status-button"
             }
-            onClick={() => setSelectedStatus(status)}
+            onClick={() => {
+              setSelectedStatus(status);
+            }}
           >
             {status}
           </button>
