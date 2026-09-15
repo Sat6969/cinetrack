@@ -1,21 +1,18 @@
-
-
 const API_URL = import.meta.env.VITE_API_URL;
 
-
 async function getmovies() {
-  let response = await fetch(API_URL + "/movies");
+  const response = await fetch(API_URL + "/movies");
 
   if (!response.ok) {
-    console.log("error");
-    return;
+    throw new Error("could not fetch movies");
   }
+
   const rawmovies = await response.json();
 
   const movies = rawmovies.map((movie) => ({
-    id: movie.id,
+    id: movie.ID,
     title: movie.title,
-    year: movie.year,
+    year: movie.release_year,
     rating: movie.rating,
 
     genres: movie.genres.map((genre) => {
@@ -23,6 +20,7 @@ async function getmovies() {
     }),
 
     poster: "/images/fallback.jpg",
+
     status: null,
     userRating: null,
     review: "",
@@ -31,36 +29,36 @@ async function getmovies() {
   return movies;
 }
 
+async function Getmoviebyid(id) {
+  const response = await fetch(
+    API_URL + "/movies/" + id
+  );
 
-async function  Getmoviebyid(id) {
-  
-  const data=await fetch(API_URL+"/movies/" +id)
-
-   if(!data.ok){
-    console.log("error cant fetch id");
-   }
-
-  const rawmovie=await data.json()
-
-  const movie={
-    id: rawmovie.id,
-    title: rawmovie.title,
-    year: rawmovie.year,
-    rating: rawmovie.rating,
-    genres: rawmovie.genres.map((genre)=>{
-      return genre.name
-  }),
-    poster: "/images/fallback.jpg",
-    status: null,
-    userRating: null,
-    review: ""
+  if (!response.ok) {
+    throw new Error("could not fetch movie");
   }
 
-  return movie;
+  const rawmovie = await response.json();
 
+  const movie = {
+    id: rawmovie.ID,
+    title: rawmovie.title,
+    year: rawmovie.release_year,
+    rating: rawmovie.rating,
+
+    genres: rawmovie.genres.map((genre) => {
+      return genre.name;
+    }),
+
+    poster: "/images/fallback.jpg",
+
+    status: null,
+    userRating: null,
+    review: "",
+  };
+
+  return movie;
 }
 
-
-export default getmovies 
-
-export {Getmoviebyid}
+export default getmovies;
+export { Getmoviebyid };

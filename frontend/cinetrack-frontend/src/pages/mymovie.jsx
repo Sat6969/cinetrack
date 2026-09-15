@@ -1,75 +1,128 @@
-import { useState } from "react";
-import { movies } from "../data/movies";
-import Moviecard from "../components/moviecard";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
+import Moviecard from "../components/Moviecard";
+import { getMyMovies } from "../services/trackingService";
+import { getToken } from "../services/authService";
 
 function MyMovies() {
-  const allStatus = movies.map((movie) => {
+  const [movies, setMovies] = useState([]);
+  const [selectedstate, setSelectedstate] = useState("All");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadMyMovies() {
+      const token = getToken();
+
+      if (!token) {
+        setError("please login first");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getMyMovies();
+
+        setMovies(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadMyMovies();
+  }, []);
+
+  if (loading) {
+    return <div>loading...</div>;
+  }
+
+  if (error === "please login first") {
+    return (
+      <div className="my-movies">
+        <h1>My Movies</h1>
+
+        <p>Please login to see your movies.</p>
+
+        <Link to="/login">
+          Login
+        </Link>
+      </div>
+    );
+  }
+
+  if (error !== "") {
+    return (
+      <div>
+        {error}
+      </div>
+    );
+  }
+
+  const rawstatuses = movies.map((movie) => {
     return movie.status;
   });
 
-  const uniqueStatus = [...new Set(allStatus)];
+  const validstatus = rawstatuses.filter((status) => {
+    return status !== null && status !== "";
+  });
 
-  const statuses = ["All", ...uniqueStatus];
+  const uniquestatus = [
+    "All",
+    ...new Set(validstatus),
+  ];
 
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const [movieSearch, setMovieSearch] = useState("");
-
-  const statusFilteredMovies = movies.filter((movie) => {
-    if (selectedStatus === "All") {
+  const filteredmovies = movies.filter((movie) => {
+    if (selectedstate === "All") {
       return true;
     }
 
-    return movie.status === selectedStatus;
-  });
-
-  const filteredMovies = statusFilteredMovies.filter((movie) => {
-    return movie.title
-      .toLowerCase()
-      .includes(movieSearch.toLowerCase());
+    return movie.status === selectedstate;
   });
 
   return (
-    <div className="my-movie-page">
-      <div className="heading">
-        My Movies
-      </div>
+    <div className="my-movies">
+      <h1>My Movies</h1>
 
-      <input
-        type="text"
-        placeholder="Search your movies..."
-        value={movieSearch}
-        onChange={(e) => {
-          setMovieSearch(e.target.value);
-        }}
-        className="my-movie-search"
-      />
-
-      <div className="filter-buttons">
-        {statuses.map((status) => (
+      <div className="status-filters">
+        {uniquestatus.map((status) => (
           <button
             key={status}
-            className={
-              selectedStatus === status
-                ? "status-button active"
-                : "status-button"
-            }
             onClick={() => {
-              setSelectedStatus(status);
+              setSelectedstate(status);
             }}
+            className={
+              selectedstate === status
+                ? "active"
+                : ""
+            }
           >
             {status}
           </button>
         ))}
       </div>
 
-      <div className="movie-result">
-        {filteredMovies.map((movie) => (
-          <Moviecard
-            key={movie.id}
-            movie={movie}
-          />
-        ))}
-      </div>
+      {movies.length === 0 ? (
+        <div>
+          You have not tracked any movies yet.
+        </div>
+      ) : filteredmovies.length === 0 ? (
+        <div>
+          No movies found for this status.
+        </div>
+      ) : (
+        <div className="movie-grid">
+          {filteredmovies.map((movie) => (
+            <Moviecard
+              key={movie.id}
+              movie={movie}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

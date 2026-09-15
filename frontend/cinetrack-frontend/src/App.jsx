@@ -7,6 +7,9 @@ import Profile from "./pages/profile.jsx";
 import ScrollToTop from "./components/scrolltotop.jsx";
 
 import MovieDetails from "./pages/moviedetail.jsx";
+import Register from "./pages/Register";
+
+import Login from "./pages/Login";
 
 function App() {
   return (
@@ -19,6 +22,8 @@ function App() {
         <Route path="/my-movies" element={<MyMovies />} />
         <Route path="/profile" element={<Profile></Profile>}></Route>
         <Route path="/movies/:id" element={<MovieDetails />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );

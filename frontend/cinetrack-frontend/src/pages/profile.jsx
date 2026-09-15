@@ -1,22 +1,96 @@
-import { movies } from "../data/movies";
-import Moviecard from "../components/moviecard";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
+import Moviecard from "../components/Moviecard";
+import {
+  getCurrentUser,
+  getMyMovies,
+} from "../services/trackingService";
+
+import { getToken } from "../services/authService";
 
 function Profile() {
-  const watchedCount = movies.filter((movie) => {
-    return movie.status === "Watched";
-  }).length;
+  const [user, setUser] = useState(null);
+  const [movies, setMovies] = useState([]);
 
-  const watchingCount = movies.filter((movie) => {
-    return movie.status === "Watching";
-  }).length;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const wantToWatchCount = movies.filter((movie) => {
-    return movie.status === "Want to Watch";
-  }).length;
+  useEffect(() => {
+    async function loadProfile() {
+      const token = getToken();
+
+      if (!token) {
+        setError("please login first");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userData = await getCurrentUser();
+        const movieData = await getMyMovies();
+
+        setUser(userData);
+        setMovies(movieData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, []);
+
+  if (loading) {
+    return <div>loading...</div>;
+  }
+
+  if (error === "please login first") {
+    return (
+      <div className="profile-page">
+        <h1>Profile</h1>
+
+        <p>Please login to view your profile.</p>
+
+        <Link to="/login">
+          Login
+        </Link>
+      </div>
+    );
+  }
+
+  if (error !== "") {
+    return <div>{error}</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  // -----------------------------
+  // STATUS COUNTS
+  // -----------------------------
 
   const watchedMovies = movies.filter((movie) => {
     return movie.status === "Watched";
   });
+
+  const watchingMovies = movies.filter((movie) => {
+    return movie.status === "Watching";
+  });
+
+  const wantToWatchMovies = movies.filter((movie) => {
+    return movie.status === "Want to Watch";
+  });
+
+  const droppedMovies = movies.filter((movie) => {
+    return movie.status === "Dropped";
+  });
+
+  // -----------------------------
+  // FAVORITE GENRES
+  // -----------------------------
 
   const watchedGenres = watchedMovies.flatMap((movie) => {
     return movie.genres;
@@ -26,23 +100,46 @@ function Profile() {
 
   watchedGenres.forEach((genre) => {
     if (genreCount[genre]) {
-      genreCount[genre]++;
+      genreCount[genre] = genreCount[genre] + 1;
     } else {
       genreCount[genre] = 1;
     }
   });
 
-  const genreArray = Object.entries(genreCount);
-
-  const topGenres = genreArray
+  const favoriteGenres = Object.entries(genreCount)
     .sort((a, b) => {
       return b[1] - a[1];
     })
     .slice(0, 3);
 
+  // -----------------------------
+  // USER RATINGS
+  // -----------------------------
+
   const ratedMovies = movies.filter((movie) => {
-    return movie.userRating != null;
+    return (
+      movie.userRating >= 1 &&
+      movie.userRating <= 10
+    );
   });
+
+  let averageRating = 0;
+
+  if (ratedMovies.length > 0) {
+    const totalRating = ratedMovies.reduce(
+      (total, movie) => {
+        return total + movie.userRating;
+      },
+      0
+    );
+
+    averageRating =
+      totalRating / ratedMovies.length;
+  }
+
+  // -----------------------------
+  // TOP RATED MOVIES
+  // -----------------------------
 
   const topRatedMovies = [...ratedMovies]
     .sort((a, b) => {
@@ -50,118 +147,149 @@ function Profile() {
     })
     .slice(0, 3);
 
-  const totalRating = ratedMovies.reduce((sum, movie) => {
-    return sum + movie.userRating;
-  }, 0);
-
-  let averageRating;
-
-  if (ratedMovies.length > 0) {
-    averageRating = (
-      totalRating / ratedMovies.length
-    ).toFixed(1);
-  } else {
-    averageRating = 0;
-  }
+  // -----------------------------
+  // REVIEWS
+  // -----------------------------
 
   const reviewedMovies = movies.filter((movie) => {
-    return movie.review;
+    return (
+      movie.review &&
+      movie.review.trim() !== ""
+    );
   });
+
+  // -----------------------------
+  // JOIN DATE
+  // -----------------------------
+
+  const joinedDate = new Date(
+    user.joined_at
+  ).toLocaleDateString();
 
   return (
     <div className="profile-page">
-      <div className="profile-header">
-        <div className="name">
-          Name
-        </div>
 
-        <div className="joined-date">
-          Joined Date
-        </div>
+      {/* USER INFO */}
+
+      <div className="profile-header">
+        <h1>{user.name}</h1>
+
+        <p>{user.email}</p>
+
+        <p>
+          Joined: {joinedDate}
+        </p>
       </div>
+
+      {/* STATS */}
 
       <div className="profile-stats">
-        <div className="stat-card">
-          <p>Watched</p>
-          <h2>{watchedCount}</h2>
+        <div className="stat-box">
+          <h3>Watched</h3>
+          <p>{watchedMovies.length}</p>
         </div>
 
-        <div className="stat-card">
-          <p>Watching</p>
-          <h2>{watchingCount}</h2>
+        <div className="stat-box">
+          <h3>Watching</h3>
+          <p>{watchingMovies.length}</p>
         </div>
 
-        <div className="stat-card">
-          <p>Want to Watch</p>
-          <h2>{wantToWatchCount}</h2>
+        <div className="stat-box">
+          <h3>Want to Watch</h3>
+          <p>{wantToWatchMovies.length}</p>
         </div>
 
-        <div className="stat-card">
-          <p>Average Rating</p>
-          <h2>{averageRating}</h2>
+        <div className="stat-box">
+          <h3>Dropped</h3>
+          <p>{droppedMovies.length}</p>
+        </div>
+
+        <div className="stat-box">
+          <h3>Average Rating</h3>
+
+          <p>
+            {ratedMovies.length > 0
+              ? averageRating.toFixed(1)
+              : "0"}
+          </p>
         </div>
       </div>
+
+      {/* FAVORITE GENRES */}
 
       <div className="favorite-genres">
-        <div className="heading">
-          Favorite Genres
-        </div>
+        <h2>Favorite Genres</h2>
 
-        <div className="genre-list">
-          {topGenres.map(([genre, count]) => (
-            <div
-              className="favorite-genre"
-              key={genre}
-            >
-              <span>{genre}</span>
-              <span>{count}</span>
-            </div>
-          ))}
-        </div>
+        {favoriteGenres.length === 0 ? (
+          <p>
+            Watch some movies to discover your
+            favorite genres.
+          </p>
+        ) : (
+          <div className="genre-list">
+            {favoriteGenres.map(
+              ([genre, count]) => (
+                <div key={genre}>
+                  {genre} ({count})
+                </div>
+              )
+            )}
+          </div>
+        )}
       </div>
+
+      {/* TOP RATED */}
 
       <div className="top-rated-section">
-        <div className="heading">
-          Top Rated By You
-        </div>
+        <h2>Your Top Rated Movies</h2>
 
-        <div className="movie-container">
-          {topRatedMovies.map((movie) => (
-            <Moviecard
-              key={movie.id}
-              movie={movie}
-            />
-          ))}
-        </div>
+        {topRatedMovies.length === 0 ? (
+          <p>
+            You have not rated any movies yet.
+          </p>
+        ) : (
+          <div className="movie-grid">
+            {topRatedMovies.map((movie) => (
+              <div key={movie.id}>
+                <Moviecard movie={movie} />
+
+                <p>
+                  Your rating:{" "}
+                  {movie.userRating}/10
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="recent-activity">
-        <div className="heading">
-          Recent Reviews
-        </div>
+      {/* REVIEWS */}
 
-        <div className="review-list">
-          {reviewedMovies.map((movie) => (
+      <div className="reviews-section">
+        <h2>Your Reviews</h2>
+
+        {reviewedMovies.length === 0 ? (
+          <p>
+            You have not written any reviews yet.
+          </p>
+        ) : (
+          reviewedMovies.map((movie) => (
             <div
-              className="review-item"
               key={movie.id}
+              className="profile-review"
             >
-              <div className="review-title">
-                {movie.title}
-              </div>
+              <h3>{movie.title}</h3>
 
-              <div className="review-rating">
-                Your Rating:{" "}
-                {movie.userRating ?? "Not Rated"}
-              </div>
-
-              <p className="review-text">
-                {movie.review}
+              <p>
+                Rating: {movie.userRating}/10
               </p>
+
+              <p>{movie.review}</p>
             </div>
-          ))}
-        </div>
+          ))
+        )}
       </div>
+
     </div>
   );
 }

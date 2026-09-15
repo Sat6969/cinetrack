@@ -4,64 +4,71 @@ import (
 	"cinetrack/database"
 	"cinetrack/models"
 	"errors"
-	"fmt"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
+// --------------------------------------------------
+// MOVIES
+// --------------------------------------------------
 
-func GetAllMovies(c *gin.Context){
+func GetAllMovies(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	var movies []models.Movie
-	ctx:=c.Request.Context()
-	err:=database.DB.WithContext(ctx).Preload("Genres").Find(&movies).Error
 
-	if(errors.Is(err,gorm.ErrRecordNotFound)){
-		c.JSON(404,gin.H{"message":"data not found"})
+	err := database.DB.WithContext(ctx).
+		Preload("Genres").
+		Find(&movies).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
 		return
 	}
-	if(err!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
-		return
-	}
-	c.JSON(200,gin.H{"message":"data found","data":movies})
+
+	// Frontend direct array expect karta hai
+	c.JSON(200, movies)
 }
 
-func GetMovieByID(c *gin.Context){
-	id:=c.Param("id")
-	ctx:=c.Request.Context()
-	var movies models.Movie
-	err:=database.DB.WithContext(ctx).Raw("select * from movies where id=?",id).Scan(&movies).Error
+func GetMovieByID(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
 
-	if(errors.Is(err,gorm.ErrRecordNotFound)){
-		c.JSON(404,gin.H{"message":"invalid data"})
-		return
-	}
-	if(err!=nil){
-		c.JSON(500,gin.H{"message":"internal issue"})
-		return
-	}
-	
-	var genres []models.Genre
-	err2:=database.DB.WithContext(ctx).Raw("select genres.* from movie_genres join genres on genres.id=movie_genres.genre_id where movie_id=?",id).Scan(&genres).Error
-	if(err2!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
+	var movie models.Movie
+
+	err := database.DB.WithContext(ctx).
+		Preload("Genres").
+		Preload("Reviews").
+		First(&movie, id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(404, gin.H{
+			"message": "movie not found",
+		})
 		return
 	}
 
-	var reviews []models.Review
-	err3:=database.DB.WithContext(ctx).Raw("select reviews.* from reviews join movies on reviews.movie_id=movies.id where movies.id=?",id).Scan(&reviews).Error
-	if(err3!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
 		return
 	}
 
-	movies.Genres=genres
-	movies.Reviews=reviews
-	c.JSON(200,gin.H{"message":"data found","movie":movies})
+	// Frontend direct movie object expect karta hai
+	c.JSON(200, movie)
 }
 
-func CreateMovie(c *gin.Context){
+func CreateMovie(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	var input struct {
 		Title       string   `json:"title"`
 		Rating      int      `json:"rating"`
@@ -70,322 +77,961 @@ func CreateMovie(c *gin.Context){
 		Genres      []string `json:"genres"`
 	}
 
-	err:=c.ShouldBindJSON(&input)
-	if(err!=nil){
-		c.JSON(400,gin.H{"message":"invalid data"})
+	err := c.ShouldBindJSON(&input)
+
+	if err != nil {
+		c.JSON(400, gin.H{
+			"message": "invalid data",
+		})
 		return
 	}
-	fmt.Println(input.Genres)
-	
-	ctx:=c.Request.Context()
-	movie:=models.Movie{
-		Title: input.Title,
-		Rating: input.Rating,
-		Description: input.Description,
+
+	movie := models.Movie{
+		Title:        input.Title,
+		Rating:       input.Rating,
 		Release_year: input.ReleaseYear,
+		Description:  input.Description,
 	}
-for _, name := range input.Genres {
-    var genres models.Genre
-    result := database.DB.WithContext(ctx).Where("name = ?", name).FirstOrCreate(&genres,models.Genre{Name:name})
-    if result.Error != nil {
-        c.JSON(500, gin.H{"message": "failed to create genre"})
-        return
-    }
-    movie.Genres = append(movie.Genres, genres)
-}
 
-	err3:=database.DB.WithContext(ctx).Create(&movie).Error
-	if(err3!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
+	for _, name := range input.Genres {
+		var genre models.Genre
+
+		result := database.DB.WithContext(ctx).
+			Where("name = ?", name).
+			FirstOrCreate(
+				&genre,
+				models.Genre{Name: name},
+			)
+
+		if result.Error != nil {
+			c.JSON(500, gin.H{
+				"message": "failed to create genre",
+			})
+			return
+		}
+
+		movie.Genres = append(movie.Genres, genre)
+	}
+
+	err = database.DB.WithContext(ctx).
+		Create(&movie).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not create movie",
+		})
 		return
 	}
-	c.JSON(201,gin.H{"message":"sucesfully created"})
+
+	c.JSON(201, gin.H{
+		"message": "movie created successfully",
+	})
 }
 
-func UpdateMovie(c *gin.Context){
-	id:=c.Param("id")
-	ctx:=c.Request.Context()
+func UpdateMovie(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+
 	var movie models.Movie
 
-	err2:=database.DB.WithContext(ctx).First(&movie,id).Error
-	if(err2!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
+	err := database.DB.WithContext(ctx).
+		First(&movie, id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(404, gin.H{
+			"message": "movie not found",
+		})
 		return
 	}
 
-	var updated_movie models.Movie
-	err:=c.ShouldBindJSON(&updated_movie)
-	if(err!=nil){
-		c.JSON(404,gin.H{"message":"invlid input"})
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
 		return
 	}
 
-	err3:=database.DB.WithContext(ctx).Model(&models.Movie{}).Where("id=?",id).Updates(&updated_movie).Error
-	if(err3!=nil){
-		c.JSON(500,gin.H{"message":"invalid input"})
-		return
-	}
-	c.JSON(200,gin.H{"message":"updated sucesfully"})
-}
+	var updatedMovie models.Movie
 
-func DeleteMovie(c *gin.Context){
-	id:=c.Param("id")
-	ctx:=c.Request.Context()
-	var movies models.Movie
+	err = c.ShouldBindJSON(&updatedMovie)
 
-	err:=database.DB.WithContext(ctx).First(&movies,id).Error
-	if(errors.Is(err,gorm.ErrRecordNotFound)){
-		c.JSON(404,gin.H{"message":"invalid data"})
-		return
-	}
-	if(err!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
+	if err != nil {
+		c.JSON(400, gin.H{
+			"message": "invalid input",
+		})
 		return
 	}
 
-	err2:=database.DB.WithContext(ctx).Delete(&movies,id).Error
-	if(err2!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
-		return
-	}
-	c.JSON(200,gin.H{"message":"sucesfully deleted"})
-}
+	err = database.DB.WithContext(ctx).
+		Model(&movie).
+		Updates(&updatedMovie).Error
 
-func GetAllUsers(c *gin.Context){
-	var users []models.User
-	ctx:=c.Request.Context()
-	err:=database.DB.WithContext(ctx).Model(&models.User{}).Find(&users).Error
-	if(err!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
-		return
-	}
-	c.JSON(200,gin.H{"message":"sucessfull","users":users})
-}
-
-func GetUserByID(c *gin.Context){
-	ctx:=c.Request.Context()
-	id:=c.Param("id")
-	var user models.User
-
-	err:=database.DB.WithContext(ctx).Preload("Reviews").First(&user,id).Error
-	if(errors.Is(err,gorm.ErrRecordNotFound)){
-		c.JSON(404,gin.H{"message":"record not found"})
-		return
-	}
-	if(err!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
-		return
-	}
-	c.JSON(200,gin.H{"message":user})
-}
-
-func CreateUser(c *gin.Context){
-	ctx:=c.Request.Context()
-	var input struct{
-		Name string  `json:"name" binding:"required,min=2"`
-		Email string `json:"email" binding:"email"`
-	}
-
-	err:=c.ShouldBindJSON(&input)
-	if(err!=nil){
-		c.JSON(404,gin.H{"messsage":"invalid input"})
-		return
-	}
-	
-	user:=models.User{
-		Name: input.Name,
-		Email: input.Email,
-	}
-
-	err2:=database.DB.WithContext(ctx).Create(&user).Error
-	if(err2!=nil){
-		c.JSON(500,gin.H{"message":"internal error"})
-		return
-	}
-	c.JSON(200,gin.H{"message":"sucesfully created"})
-}
-
-func DeleteUser(c *gin.Context){
-	id:=c.Param("id")
-	ctx:=c.Request.Context()
-	var user models.User
-
-	err:=database.DB.WithContext(ctx).First(&user,id).Error
-	if(errors.Is(err,gorm.ErrRecordNotFound)){
-		c.JSON(404,gin.H{"message":"invalid data"})
-		return
-	}
-	if(err!=nil){
-		c.JSON(500,gin.H{"message":"something went wrong"})
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not update movie",
+		})
 		return
 	}
 
-	err2:=database.DB.WithContext(ctx).Model(&models.User{}).Delete(&user,id).Error
-	if(err2!=nil){
-		c.JSON(500,gin.H{"message":"something went wrong"})
-		return
-	}
-	c.JSON(200,gin.H{"message":"succesfully deleted"})
-}
-
-func CreateReview(c *gin.Context){
-	ctx:=c.Request.Context()
-	var review models.Review
-
-	err:=c.ShouldBindJSON(&review)
-	if(err!=nil){
-		c.JSON(404,gin.H{"message":"invalid data"})
-		return
-	}
-
-	err2:=database.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		err:=tx.Create(&review).Error
-		if(err!=nil){
-			return err
-		} 
-		var avgrating float64
-		tx.Model(&models.Review{}).Where("movie_id=?",review.MovieID).Select("AVG(rating)").Scan(&avgrating)
-
-		if err:=tx.Model(&models.Movie{}).Where("id=?",review.MovieID).Update("rating",avgrating).Error; err!=nil{
-			return err
-		}
-		return nil
+	c.JSON(200, gin.H{
+		"message": "movie updated successfully",
 	})
-
-	if(err2!=nil){
-		c.JSON(500,gin.H{"message":"something went wrong"})
-		return
-	}
-	c.JSON(200,gin.H{"message":"succesfull"})
 }
 
-func GetReviewsByMovie(c *gin.Context){
-	id:=c.Param("id")
-	ctx:=c.Request.Context()
+func DeleteMovie(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+
+	var movie models.Movie
+
+	err := database.DB.WithContext(ctx).
+		First(&movie, id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(404, gin.H{
+			"message": "movie not found",
+		})
+		return
+	}
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	}
+
+	err = database.DB.WithContext(ctx).
+		Delete(&movie).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not delete movie",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "movie deleted successfully",
+	})
+}
+
+func HardDeleteMovie(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+
+	var movie models.Movie
+
+	err := database.DB.WithContext(ctx).
+		Unscoped().
+		First(&movie, id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(404, gin.H{
+			"message": "movie not found",
+		})
+		return
+	}
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	}
+
+	err = database.DB.WithContext(ctx).
+		Unscoped().
+		Delete(&movie).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not permanently delete movie",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "movie permanently deleted",
+	})
+}
+
+func BatchCreateMovies(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var movies []models.Movie
+
+	err := c.ShouldBindJSON(&movies)
+
+	if err != nil {
+		c.JSON(400, gin.H{
+			"message": "invalid data",
+		})
+		return
+	}
+
+	err = database.DB.WithContext(ctx).
+		CreateInBatches(&movies, 10).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not create movies",
+		})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"message": "movies created successfully",
+	})
+}
+
+func GetHighRatedMovies(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var movies []models.Movie
+
+	err := database.DB.WithContext(ctx).
+		Scopes(models.HighRated).
+		Preload("Genres").
+		Find(&movies).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	}
+
+	c.JSON(200, movies)
+}
+
+func GetLatestMovies(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var movies []models.Movie
+
+	err := database.DB.WithContext(ctx).
+		Scopes(models.Recentmovies).
+		Preload("Genres").
+		Find(&movies).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	}
+
+	c.JSON(200, movies)
+}
+
+// --------------------------------------------------
+// REVIEWS
+// --------------------------------------------------
+
+func GetReviewsByMovie(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+
 	var reviews []models.Review
 
-	err:=database.DB.WithContext(ctx).Where("movie_id=?",id).Find(&reviews).Error
-	if(err!=nil){
-		c.JSON(500,gin.H{"message":"something went wrong"})
-		return
-	}
-	c.JSON(200,gin.H{"message":reviews})
-}
+	err := database.DB.WithContext(ctx).
+		Where("movie_id = ?", id).
+		Find(&reviews).Error
 
-func GetHighRatedMovies(c *gin.Context){
-	ctx:=c.Request.Context()
-
-	var movies []models.Movie
-
-	err:=database.DB.WithContext(ctx).Scopes(models.HighRated).Preload("Genres").Preload("Reviews").Find(&movies).Error
-
-	if(err!=nil){
-		c.JSON(500,gin.H{
-			"message":"internal error",
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not get reviews",
 		})
 		return
 	}
 
-	c.JSON(200,gin.H{
-		"message":movies,
+	c.JSON(200, reviews)
+}
+
+// --------------------------------------------------
+// STATS
+// --------------------------------------------------
+
+func GetStats(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var movieCount int64
+	var userCount int64
+	var reviewCount int64
+
+	err := database.DB.WithContext(ctx).
+		Model(&models.Movie{}).
+		Count(&movieCount).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"message": "internal error"})
+		return
+	}
+
+	err = database.DB.WithContext(ctx).
+		Model(&models.User{}).
+		Count(&userCount).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"message": "internal error"})
+		return
+	}
+
+	err = database.DB.WithContext(ctx).
+		Model(&models.Review{}).
+		Count(&reviewCount).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"message": "internal error"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"total_movies": movieCount,
+		"total_users":  userCount,
+		"total_reviews": reviewCount,
 	})
 }
 
-func GetLatestMovies(c *gin.Context){
-	ctx:=c.Request.Context()
+// --------------------------------------------------
+// AUTH
+// --------------------------------------------------
 
-	var movie []models.Movie
+type RegisterRequest struct {
+	Name     string `json:"name" binding:"required,min=2"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+}
 
-	err:=database.DB.WithContext(ctx).Scopes(models.Recentmovies).Preload("Genres").Preload("Reviews").Find(&movie).Error
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
 
-	if(err!=nil){
-		c.JSON(500,gin.H{
-			"message":"internal error",
+func Register(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var input RegisterRequest
+
+	err := c.ShouldBindJSON(&input)
+
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": "invalid request",
 		})
 		return
 	}
 
-	c.JSON(200,gin.H{
-		"message":movie,
+	// Check duplicate email
+	var existingUser models.User
+
+	err = database.DB.WithContext(ctx).
+		Where("email = ?", input.Email).
+		First(&existingUser).Error
+
+	if err == nil {
+		c.JSON(409, gin.H{
+			"error": "email already registered",
+		})
+		return
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(500, gin.H{
+			"error": "internal error",
+		})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(input.Password),
+		bcrypt.DefaultCost,
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "could not hash password",
+		})
+		return
+	}
+
+	user := models.User{
+		Name:     input.Name,
+		Email:    input.Email,
+		Password: string(hashedPassword),
+	}
+
+	err = database.DB.WithContext(ctx).
+		Create(&user).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "could not create user",
+		})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"message": "user registered successfully",
 	})
 }
 
-func BatchCreateMovies(c *gin.Context){
-	ctx:=c.Request.Context()
-	var movies []models.Movie
+func Login(c *gin.Context) {
+	ctx := c.Request.Context()
 
-	err:=c.ShouldBindJSON(&movies)
-	if(err!=nil){
-		c.JSON(404,gin.H{
-			"message":"invalid data",
+	var input LoginRequest
+
+	err := c.ShouldBindJSON(&input)
+
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": "invalid request",
 		})
 		return
 	}
 
-	err2:=database.DB.WithContext(ctx).CreateInBatches(&movies,10).Error
+	var user models.User
 
-	if(err2!=nil){
-		c.JSON(500,gin.H{
-			"message":"something went wrong",
+	err = database.DB.WithContext(ctx).
+		Where("email = ?", input.Email).
+		First(&user).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(401, gin.H{
+			"error": "invalid email or password",
 		})
 		return
 	}
 
-	c.JSON(200,gin.H{
-		"message":"sucessfully created",
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "internal error",
+		})
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(user.Password),
+		[]byte(input.Password),
+	)
+
+	if err != nil {
+		c.JSON(401, gin.H{
+			"error": "invalid email or password",
+		})
+		return
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+
+	if secret == "" {
+		c.JSON(500, gin.H{
+			"error": "jwt secret not configured",
+		})
+		return
+	}
+
+	claims := jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+	}
+
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		claims,
+	)
+
+	tokenString, err := token.SignedString(
+		[]byte(secret),
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "could not generate token",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"token": tokenString,
 	})
 }
 
+// --------------------------------------------------
+// CURRENT USER
+// --------------------------------------------------
 
-func HardDeleteMovie(c *gin.Context){
-	ctx:=c.Request.Context()
+func GetCurrentUser(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userIDValue, exists := c.Get("user_id")
+
+	if !exists {
+		c.JSON(401, gin.H{
+			"message": "unauthorized",
+		})
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+
+	if !ok {
+		c.JSON(401, gin.H{
+			"message": "invalid user",
+		})
+		return
+	}
+
+	var user models.User
+
+	err := database.DB.WithContext(ctx).
+		First(&user, userID).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(404, gin.H{
+			"message": "user not found",
+		})
+		return
+	}
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"id":        user.ID,
+		"name":      user.Name,
+		"email":     user.Email,
+		"joined_at": user.CreatedAt,
+	})
+}
+
+// --------------------------------------------------
+// TRACKING
+// --------------------------------------------------
+
+type TrackingRequest struct {
+	Status     string `json:"status"`
+	UserRating int    `json:"userRating"`
+	Review     string `json:"review"`
+}
+
+func SaveTracking(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userIDValue, exists := c.Get("user_id")
+
+	if !exists {
+		c.JSON(401, gin.H{
+			"message": "unauthorized",
+		})
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+
+	if !ok {
+		c.JSON(401, gin.H{
+			"message": "invalid user",
+		})
+		return
+	}
+
+	id := c.Param("id")
+
 	var movie models.Movie
 
-	err:=c.BindJSON(&movie)
+	err := database.DB.WithContext(ctx).
+		First(&movie, id).Error
 
-	if(err!=nil){
-		c.JSON(404,gin.H{
-			"message":"invalid data",
-		})
-		return
-	}
-	err2:=database.DB.WithContext(ctx).First(&movie).Error
-
-	if(err2!=nil){
-		c.JSON(500,gin.H{
-			"message":"something went wrong",
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(404, gin.H{
+			"message": "movie not found",
 		})
 		return
 	}
 
-	err3:=database.DB.WithContext(ctx).Unscoped().Delete(&movie).Error
-
-	if(err3!=nil){
-		c.JSON(500,gin.H{
-			"message":"something went wrong",
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
 		})
 		return
 	}
 
-	c.JSON(200,gin.H{
-		"message":"deleted sucessfully",
+	var input TrackingRequest
+
+	err = c.ShouldBindJSON(&input)
+
+	if err != nil {
+		c.JSON(400, gin.H{
+			"message": "invalid input",
+		})
+		return
+	}
+
+	if input.Status == "" {
+		c.JSON(400, gin.H{
+			"message": "status is required",
+		})
+		return
+	}
+
+	if input.Status != "Watched" &&
+		input.Status != "Watching" &&
+		input.Status != "Want to Watch" &&
+		input.Status != "Dropped" {
+
+		c.JSON(400, gin.H{
+			"message": "invalid status",
+		})
+		return
+	}
+
+	if input.UserRating < 1 || input.UserRating > 10 {
+		c.JSON(400, gin.H{
+			"message": "rating must be between 1 and 10",
+		})
+		return
+	}
+
+	// -------------------------
+	// STATUS
+	// -------------------------
+
+	var tracking models.UserMovie
+
+	err = database.DB.WithContext(ctx).
+		Where(
+			"user_id = ? AND movie_id = ?",
+			userID,
+			movie.ID,
+		).
+		First(&tracking).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tracking = models.UserMovie{
+			UserID:  userID,
+			MovieID: movie.ID,
+			Status:  input.Status,
+		}
+
+		err = database.DB.WithContext(ctx).
+			Create(&tracking).Error
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "could not save status",
+			})
+			return
+		}
+	} else if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	} else {
+		tracking.Status = input.Status
+
+		err = database.DB.WithContext(ctx).
+			Save(&tracking).Error
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "could not update status",
+			})
+			return
+		}
+	}
+
+	// -------------------------
+	// RATING + REVIEW
+	// -------------------------
+
+	var review models.Review
+
+	err = database.DB.WithContext(ctx).
+		Where(
+			"user_id = ? AND movie_id = ?",
+			userID,
+			movie.ID,
+		).
+		First(&review).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		review = models.Review{
+			UserID:  userID,
+			MovieID: movie.ID,
+			Rating:  input.UserRating,
+			Comment: input.Review,
+		}
+
+		err = database.DB.WithContext(ctx).
+			Create(&review).Error
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "could not save review",
+			})
+			return
+		}
+	} else if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	} else {
+		review.Rating = input.UserRating
+		review.Comment = input.Review
+
+		err = database.DB.WithContext(ctx).
+			Save(&review).Error
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "could not update review",
+			})
+			return
+		}
+	}
+
+	// -------------------------
+	// UPDATE MOVIE AVERAGE RATING
+	// -------------------------
+
+	var avgRating float64
+
+	err = database.DB.WithContext(ctx).
+		Model(&models.Review{}).
+		Where("movie_id = ?", movie.ID).
+		Select("AVG(rating)").
+		Scan(&avgRating).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not calculate average rating",
+		})
+		return
+	}
+
+	err = database.DB.WithContext(ctx).
+		Model(&models.Movie{}).
+		Where("id = ?", movie.ID).
+		Update("rating", int(avgRating)).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not update movie rating",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "tracking saved successfully",
 	})
-
 }
 
-func GetStats(c *gin.Context){
-	ctx:=c.Request.Context()
-	var movieCount,userCount,reviewCount int64
+// --------------------------------------------------
+// GET TRACKING FOR ONE MOVIE
+// --------------------------------------------------
 
-	database.DB.WithContext(ctx).Model(&models.Movie{}).Count(&movieCount)
-	database.DB.WithContext(ctx).Model(&models.User{}).Count(&userCount)
-	database.DB.WithContext(ctx).Model(&models.Review{}).Count(&reviewCount)
+func GetTracking(c *gin.Context) {
+	ctx := c.Request.Context()
 
-	c.JSON(200,gin.H{
-		"total_movies":movieCount,
-		"total_users":userCount,
-		"total_review":reviewCount,
-	})
+	userIDValue, exists := c.Get("user_id")
+
+	if !exists {
+		c.JSON(401, gin.H{
+			"message": "unauthorized",
+		})
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+
+	if !ok {
+		c.JSON(401, gin.H{
+			"message": "invalid user",
+		})
+		return
+	}
+
+	id := c.Param("id")
+
+	var movie models.Movie
+
+	err := database.DB.WithContext(ctx).
+		First(&movie, id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(404, gin.H{
+			"message": "movie not found",
+		})
+		return
+	}
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "internal error",
+		})
+		return
+	}
+
+	response := gin.H{
+		"status":     "",
+		"userRating": nil,
+		"review":     "",
+	}
+
+	var tracking models.UserMovie
+
+	err = database.DB.WithContext(ctx).
+		Where(
+			"user_id = ? AND movie_id = ?",
+			userID,
+			movie.ID,
+		).
+		First(&tracking).Error
+
+	if err == nil {
+		response["status"] = tracking.Status
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(500, gin.H{
+			"message": "could not get tracking",
+		})
+		return
+	}
+
+	var review models.Review
+
+	err = database.DB.WithContext(ctx).
+		Where(
+			"user_id = ? AND movie_id = ?",
+			userID,
+			movie.ID,
+		).
+		First(&review).Error
+
+	if err == nil {
+		response["userRating"] = review.Rating
+		response["review"] = review.Comment
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(500, gin.H{
+			"message": "could not get review",
+		})
+		return
+	}
+
+	c.JSON(200, response)
 }
 
+// --------------------------------------------------
+// MY MOVIES
+// --------------------------------------------------
 
+type MyMovieResponse struct {
+	ID          uint           `json:"id"`
+	Title       string         `json:"title"`
+	Rating      int            `json:"rating"`
+	ReleaseYear int            `json:"release_year"`
+	Description string         `json:"description"`
+	Genres      []models.Genre `json:"genres"`
+	Status      string         `json:"status"`
+	UserRating  int            `json:"userRating"`
+	Review      string         `json:"review"`
+}
+
+func GetMyMovies(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userIDValue, exists := c.Get("user_id")
+
+	if !exists {
+		c.JSON(401, gin.H{
+			"message": "unauthorized",
+		})
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+
+	if !ok {
+		c.JSON(401, gin.H{
+			"message": "invalid user",
+		})
+		return
+	}
+
+	var trackedMovies []models.UserMovie
+
+	err := database.DB.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("updated_at DESC").
+		Find(&trackedMovies).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "could not get tracked movies",
+		})
+		return
+	}
+
+	result := []MyMovieResponse{}
+
+	for _, tracking := range trackedMovies {
+		var movie models.Movie
+
+		err = database.DB.WithContext(ctx).
+			Preload("Genres").
+			First(&movie, tracking.MovieID).Error
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			continue
+		}
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "could not get movie",
+			})
+			return
+		}
+
+		var review models.Review
+
+		err = database.DB.WithContext(ctx).
+			Where(
+				"user_id = ? AND movie_id = ?",
+				userID,
+				movie.ID,
+			).
+			First(&review).Error
+
+		if err != nil &&
+			!errors.Is(err, gorm.ErrRecordNotFound) {
+
+			c.JSON(500, gin.H{
+				"message": "could not get review",
+			})
+			return
+		}
+
+		item := MyMovieResponse{
+			ID:          movie.ID,
+			Title:       movie.Title,
+			Rating:      movie.Rating,
+			ReleaseYear: movie.Release_year,
+			Description: movie.Description,
+			Genres:      movie.Genres,
+			Status:      tracking.Status,
+			UserRating:  review.Rating,
+			Review:      review.Comment,
+		}
+
+		result = append(result, item)
+	}
+
+	c.JSON(200, result)
+}
